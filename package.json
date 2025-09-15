@@ -1,0 +1,27 @@
+{
+  "name": "brevly-server",
+  "version": "1.0.0",
+  "description": "back-end de aplicação para encurtar de URL",
+  "main": "index.js",
+  "scripts": {
+    "dev": "tsx watch --env-file .env src/infra/http/server.ts",
+    "test": "",
+    "build": ""
+  },
+  "keywords": [],
+  "author": "rafaela.fae",
+  "license": "ISC",
+  "packageManager": "pnpm@10.15.0",
+  "devDependencies": {
+    "@biomejs/biome": "^2.2.4",
+    "@types/node": "^24.4.0",
+    "tsx": "^4.20.5",
+    "typescript": "^5.9.2"
+  },
+  "dependencies": {
+    "@fastify/cors": "^11.1.0",
+    "fastify": "^5.6.0",
+    "fastify-type-provider-zod": "^6.0.0",
+    "zod": "^4.1.8"
+  }
+}
