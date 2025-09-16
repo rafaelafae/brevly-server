@@ -19,7 +19,8 @@
     "rules": {
       "recommended": true,
       "correctness": {
-        "noUnusedVariables": "off"
+        "noUnusedVariables": "info",
+        "noUnusedFunctionParameters": "info"
       }
     }
   },
@@ -28,7 +29,7 @@
       "quoteStyle": "single",
       "semicolons": "asNeeded",
       "arrowParentheses": "asNeeded",
-      "jsxQuoteStyle": "double",
+      "jsxQuoteStyle": "single",
       "trailingCommas": "es5"
     }
   },
