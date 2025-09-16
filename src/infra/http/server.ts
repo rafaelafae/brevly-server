@@ -1,15 +1,15 @@
-import { env } from '@/env'
 import { fastifyCors } from '@fastify/cors'
+import fastifySwagger from '@fastify/swagger'
+import fastifySwaggerUI from '@fastify/swagger-ui'
 import fastify from 'fastify'
 import {
   hasZodFastifySchemaValidationErrors,
   serializerCompiler,
   validatorCompiler,
 } from 'fastify-type-provider-zod'
+import { env } from '@/env'
 import { createLinkRoute } from './routes/create-link'
-import fastifySwagger from '@fastify/swagger'
-import fastifySwaggerUI from '@fastify/swagger-ui'
-
+import { getLinkRoute } from './routes/get-link'
 
 const server = fastify()
 
@@ -30,12 +30,12 @@ server.setErrorHandler((error, _request, reply) => {
 
 server.register(fastifyCors, { origin: '*' })
 
-server.register(fastifySwagger,{
-  openapi: { 
+server.register(fastifySwagger, {
+  openapi: {
     info: {
       title: 'Brev.ly API',
       description: 'API para encurtador de URL',
-      version: '1.0.0'
+      version: '1.0.0',
     },
   },
 })
@@ -46,6 +46,7 @@ server.register(fastifySwaggerUI, {
 
 // Implementar rotas
 server.register(createLinkRoute)
+server.register(getLinkRoute)
 
 console.log(env.DATABASE_URL)
 
