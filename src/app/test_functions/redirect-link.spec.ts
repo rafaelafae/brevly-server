@@ -1,12 +1,12 @@
 import { eq } from 'drizzle-orm'
 import { afterAll, beforeEach, describe, expect, it } from 'vitest'
 import { LinkNotFoundError } from '@/app/functions/errors/link-not-found-error'
-import { getLink } from '@/app/functions/get-link'
+import { getLink } from '@/app/functions/redirect-link'
 import { db, pg } from '@/infra/db'
 import { schema } from '@/infra/db/schema'
 import { isLeft, isRight, unwrapEither } from '@/infra/shared/either'
 
-describe('get link use case (integration)', () => {
+describe('get link use case', () => {
   beforeEach(async () => {
     await db.delete(schema.links)
   })

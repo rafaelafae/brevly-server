@@ -1,7 +1,7 @@
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod'
 import { z } from 'zod'
 import { LinkNotFoundError } from '@/app/functions/errors/link-not-found-error'
-import { getLink } from '@/app/functions/get-link'
+import { getLink } from '@/app/functions/redirect-link'
 import { isLeft } from '@/infra/shared/either'
 
 export const getLinkRoute: FastifyPluginAsyncZod = async server => {

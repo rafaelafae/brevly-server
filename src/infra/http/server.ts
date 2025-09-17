@@ -8,7 +8,8 @@ import {
 } from 'fastify-type-provider-zod'
 import { env } from '@/env'
 import { createLinkRoute } from './routes/create-link'
-import { getLinkRoute } from './routes/get-link'
+import { deleteLinkRoute } from './routes/delete-link'
+import { getLinkRoute } from './routes/redirect-link'
 
 const server = fastify()
 
@@ -46,6 +47,7 @@ server.register(fastifySwaggerUI, {
 // Implementar rotas
 server.register(createLinkRoute)
 server.register(getLinkRoute)
+server.register(deleteLinkRoute)
 
 console.log(env.DATABASE_URL)
 
