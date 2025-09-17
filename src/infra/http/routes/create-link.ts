@@ -1,7 +1,9 @@
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod'
 import { z } from 'zod'
 import { createLink } from '@/app/functions/create-link'
-import { LinkAlreadyExistsError } from '@/app/functions/errors/link-already-exists'
+import { InvalidUrlFormatError } from '@/app/functions/errors/invalid-url-format-error'
+import { LinkAlreadyExistsError } from '@/app/functions/errors/link-already-exists-error'
+import { env } from '@/env'
 import { isLeft } from '@/infra/shared/either'
 
 export const createLinkRoute: FastifyPluginAsyncZod = async server => {
@@ -12,36 +14,47 @@ export const createLinkRoute: FastifyPluginAsyncZod = async server => {
         summary: 'Create a link',
         body: z.object({
           url: z.url(),
+          urlCode: z
+            .string()
+            .min(3)
+            .regex(/^[a-zA-Z0-9_-]+$/)
+            .optional(),
         }),
         response: {
-          201: z.object({ shortUrl: z.string() }),
-          409: z.object({ message: z.string() }).describe('Url already exists'),
-          400: z
-            .object({ message: z.string() })
-            .describe('Could not create link after multiple attempts'),
-          500: z
-            .object({ message: z.string() })
-            .describe('Internal server error.'),
+          201: z.object({ shortenedUrl: z.url() }),
+          400: z.object({ message: z.string() }),
+          409: z.object({ message: z.string() }),
+          500: z.object({ message: z.string() }),
         },
       },
     },
     async (request, reply) => {
-      const { url } = request.body
+      try {
+        const { url, urlCode } = request.body
 
-      const result = await createLink({ url })
+        const result = await createLink(
+          { originalUrl: url, urlCode },
+          { baseUrl: env.BASE_URL }
+        )
 
-      if (isLeft(result)) {
-        const error = result.left
-        if (error instanceof LinkAlreadyExistsError) {
-          return reply.status(409).send({ message: error.message })
+        if (isLeft(result)) {
+          const error = result.left
+
+          switch (error.constructor) {
+            case InvalidUrlFormatError:
+              return reply.status(400).send({ message: error.message })
+            case LinkAlreadyExistsError:
+              return reply.status(409).send({ message: error.message })
+          }
+        } else {
+          const { shortenedUrl } = result.right
+          return reply.status(201).send({ shortenedUrl })
         }
-        return reply.status(400).send({ message: error.message })
+      } catch (error) {
+        console.error(error)
+
+        return reply.status(500).send({ message: 'Internal server error.' })
       }
-
-      const { urlCode } = result.right
-      const shortUrl = new URL(`/${urlCode}`, 'http://localhost:1919')
-
-      return reply.status(201).send({ shortUrl: shortUrl.toString() })
     }
   )
 }

@@ -2,7 +2,7 @@ import { eq, sql } from 'drizzle-orm'
 import { db } from '@/infra/db'
 import { schema } from '@/infra/db/schema'
 import { type Either, makeLeft, makeRight } from '@/infra/shared/either'
-import { LinkNotFoundError } from './errors/link-not-found'
+import { LinkNotFoundError } from './errors/link-not-found-error'
 
 type GetLinkInput = {
   urlCode: string

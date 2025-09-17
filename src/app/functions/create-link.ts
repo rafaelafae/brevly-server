@@ -4,21 +4,21 @@ import { z } from 'zod'
 import { db } from '@/infra/db'
 import { schema } from '@/infra/db/schema'
 import { type Either, makeLeft, makeRight } from '@/infra/shared/either'
-import { InvalidUrlFormatError } from './errors/invalid-url-format'
-import { LinkAlreadyExistsError } from './errors/link-already-exists'
+import { InvalidUrlFormatError } from './errors/invalid-url-format-error'
+import { LinkAlreadyExistsError } from './errors/link-already-exists-error'
 
 const createLinkInputSchema = z.object({
-  url: z.url(),
+  originalUrl: z.url(),
+  urlCode: z.string().min(3).optional(),
 })
 
 type CreateLinkInput = z.input<typeof createLinkInputSchema>
-
-type CreateLinkError = InvalidUrlFormatError
-
-type CreateLinkSuccess = { urlCode: string }
+type CreateLinkError = InvalidUrlFormatError | LinkAlreadyExistsError
+type CreateLinkSuccess = { shortenedUrl: string }
 
 export async function createLink(
-  input: CreateLinkInput
+  input: CreateLinkInput,
+  dependencies: { baseUrl: string }
 ): Promise<Either<CreateLinkError, CreateLinkSuccess>> {
   const validation = createLinkInputSchema.safeParse(input)
 
@@ -26,32 +26,32 @@ export async function createLink(
     return makeLeft(new InvalidUrlFormatError())
   }
 
-  const { url } = validation.data
+  const { originalUrl, urlCode: userProvidedCode } = validation.data
+  const { baseUrl } = dependencies
+
+  if (userProvidedCode) {
+    const existingLink = await db.query.links.findFirst({
+      where: eq(schema.links.urlCode, userProvidedCode),
+    })
+    if (existingLink) {
+      return makeLeft(new LinkAlreadyExistsError())
+    }
+  }
+
+  const urlCode = userProvidedCode || nanoid(7)
+
+  const shortenedUrl = new URL(urlCode, baseUrl).toString()
 
   try {
-    let urlCode: string
-    for (let i = 0; i < 5; i++) {
-      urlCode = nanoid(7)
-      const existingLink = await db.query.links.findFirst({
-        where: eq(schema.links.urlCode, urlCode),
-      })
+    await db.insert(schema.links).values({ originalUrl, urlCode, shortenedUrl })
 
-      if (!existingLink) {
-        const [newLink] = await db
-          .insert(schema.links)
-          .values({ originalUrl: url, urlCode: urlCode })
-          .returning({ code: schema.links.urlCode })
-
-        return makeRight({ urlCode: newLink.code })
-      }
-    }
-
-    return makeLeft(new Error('Could not generate a unique code.'))
+    return makeRight({ shortenedUrl })
   } catch (error) {
     if (error instanceof Error && 'code' in error && error.code === '23505') {
       return makeLeft(new LinkAlreadyExistsError())
     }
     console.error(error)
-    return makeLeft(new Error('Internal database error.'))
+
+    throw new Error('Internal database error.')
   }
 }

@@ -1,6 +1,6 @@
 import { eq } from 'drizzle-orm'
 import { afterAll, beforeEach, describe, expect, it } from 'vitest'
-import { LinkNotFoundError } from '@/app/functions/errors/link-not-found'
+import { LinkNotFoundError } from '@/app/functions/errors/link-not-found-error'
 import { getLink } from '@/app/functions/get-link'
 import { db, pg } from '@/infra/db'
 import { schema } from '@/infra/db/schema'
@@ -16,15 +16,19 @@ describe('get link use case (integration)', () => {
   })
 
   it('should be able to get a link and increment its access count', async () => {
+    const urlCode = 'github123'
+    const shortenedUrl = `http://test.com/${urlCode}`
+
     const [createdLink] = await db
       .insert(schema.links)
       .values({
         originalUrl: 'https://www.github.com',
-        urlCode: 'github123',
+        urlCode,
+        shortenedUrl,
       })
       .returning()
 
-    const result = await getLink({ urlCode: 'github123' })
+    const result = await getLink({ urlCode })
 
     expect(isRight(result)).toBe(true)
 

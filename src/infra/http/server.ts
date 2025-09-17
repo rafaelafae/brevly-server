@@ -3,7 +3,6 @@ import fastifySwagger from '@fastify/swagger'
 import fastifySwaggerUI from '@fastify/swagger-ui'
 import fastify from 'fastify'
 import {
-  hasZodFastifySchemaValidationErrors,
   serializerCompiler,
   validatorCompiler,
 } from 'fastify-type-provider-zod'
@@ -17,7 +16,7 @@ server.setValidatorCompiler(validatorCompiler)
 server.setSerializerCompiler(serializerCompiler)
 
 server.setErrorHandler((error, _request, reply) => {
-  if (hasZodFastifySchemaValidationErrors(error)) {
+  if (error.validation) {
     return reply
       .status(400)
       .send({ message: 'Validation error.', issues: error.validation })
@@ -50,6 +49,6 @@ server.register(getLinkRoute)
 
 console.log(env.DATABASE_URL)
 
-server.listen({ port: 1919, host: '0.0.0.0' }).then(() => {
-  console.log('HTTP Server is running!')
+server.listen({ port: env.PORT, host: '0.0.0.0' }).then(() => {
+  console.log('🚀 HTTP Server is running!')
 })

@@ -1,5 +1,5 @@
 {
-  "id": "ea3124b4-5656-4ec2-a315-7a5c672ab47e",
+  "id": "9f4ae639-a8af-485a-a820-ecb359b0210a",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -22,6 +22,12 @@
         },
         "url_code": {
           "name": "url_code",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "shortened_url": {
+          "name": "shortened_url",
           "type": "text",
           "primaryKey": false,
           "notNull": true

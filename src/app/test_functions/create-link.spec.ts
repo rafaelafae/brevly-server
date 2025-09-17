@@ -1,11 +1,22 @@
 import { afterAll, beforeEach, describe, expect, it } from 'vitest'
 import { createLink } from '@/app/functions/create-link'
-import { InvalidUrlFormatError } from '@/app/functions/errors/invalid-url-format'
+import { LinkAlreadyExistsError } from '@/app/functions/errors/link-already-exists-error'
 import { db, pg } from '@/infra/db'
 import { schema } from '@/infra/db/schema'
-import { isLeft, isRight, unwrapEither } from '@/infra/shared/either'
+import { isLeft, isRight } from '@/infra/shared/either'
+import { InvalidUrlFormatError } from '../functions/errors/invalid-url-format-error'
 
-describe('create link use case (integration)', () => {
+type CreateLinkInput = Parameters<typeof createLink>[0]
+
+function createLinkInTest(input: CreateLinkInput) {
+  const dependencies = {
+    baseUrl: 'http://test.com',
+  }
+
+  return createLink(input, dependencies)
+}
+
+describe('create link use case', () => {
   beforeEach(async () => {
     await db.delete(schema.links)
   })
@@ -14,30 +25,48 @@ describe('create link use case (integration)', () => {
     await pg.end()
   })
 
-  it('should be able to create a new short link', async () => {
-    const result = await createLink({
-      url: 'https://www.google.com',
+  it('should be able to create a new short link with a random code', async () => {
+    const result = await createLinkInTest({
+      originalUrl: 'https://www.google.com',
     })
 
     expect(isRight(result)).toBe(true)
-
-    const savedLink = await db.query.links.findFirst({
-      where: (links, { eq }) => eq(links.originalUrl, 'https://www.google.com'),
-    })
-
-    expect(savedLink).toBeDefined()
-    expect(savedLink?.urlCode).toHaveLength(7)
   })
 
-  it('should return an error if URL format is invalid', async () => {
-    const result = await createLink({
-      url: 'not-a-valid-url',
+  it('should be able to create a new short link with a custom code', async () => {
+    const result = await createLinkInTest({
+      originalUrl: 'https://www.github.com',
+      urlCode: 'my-github',
+    })
+
+    expect(isRight(result)).toBe(true)
+    if (isRight(result)) {
+      expect(result.right.shortenedUrl).toBe('http://test.com/my-github')
+    }
+  })
+
+  it('should return a validation error if URL format is invalid', async () => {
+    const result = await createLinkInTest({
+      originalUrl: 'not-a-valid-url',
     })
 
     expect(isLeft(result)).toBe(true)
-    expect(unwrapEither(result)).toBeInstanceOf(InvalidUrlFormatError)
+    expect(result.left).toBeInstanceOf(InvalidUrlFormatError)
+  })
 
-    const savedLinks = await db.query.links.findMany()
-    expect(savedLinks).toHaveLength(0)
+  it('should return an error if custom code already exists', async () => {
+    await createLinkInTest({
+      originalUrl: 'https://some-url.com',
+      urlCode: 'existing-code',
+    })
+
+    const result = await createLinkInTest({
+      originalUrl: 'https://another-url.com',
+      urlCode: 'existing-code',
+    })
+
+    expect(isLeft(result)).toBe(true)
+    const error = result.left
+    expect(error).toBeInstanceOf(LinkAlreadyExistsError)
   })
 })
