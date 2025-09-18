@@ -8,18 +8,8 @@ import { schema } from '@/infra/db/schema'
 import { isLeft, isRight } from '@/infra/shared/either'
 
 describe('delete link use case', () => {
-  let createdLink: { id: string; urlCode: string; shortenedUrl: string }
-
   beforeEach(async () => {
     await db.delete(schema.links)
-    ;[createdLink] = await db
-      .insert(schema.links)
-      .values({
-        originalUrl: 'https://to-be-deleted.com',
-        urlCode: 'delete-me',
-        shortenedUrl: 'http://localhost/delete-me',
-      })
-      .returning()
   })
 
   afterAll(async () => {
@@ -27,37 +17,70 @@ describe('delete link use case', () => {
   })
 
   it('should be able to delete a link by its ID', async () => {
-    const result = await deleteLink({ linkId: createdLink.id })
+    const [createdLink] = await db
+      .insert(schema.links)
+      .values({
+        originalUrl: 'https://to-be-deleted.com',
+        urlCode: 'delete-me-by-id',
+        shortenedUrl: 'http://localhost/delete-me-by-id',
+      })
+      .returning()
+
+    const result = await deleteLink({ id: createdLink.id })
     expect(isRight(result)).toBe(true)
 
-    const linkInDb = await db.query.links.findFirst({
-      where: eq(schema.links.id, createdLink.id),
-    })
-    expect(linkInDb).toBeUndefined()
+    const linkInDb = await db
+      .select()
+      .from(schema.links)
+      .where(eq(schema.links.id, createdLink.id))
+
+    expect(linkInDb).toHaveLength(0)
   })
 
   it('should be able to delete a link by its urlCode', async () => {
+    const [createdLink] = await db
+      .insert(schema.links)
+      .values({
+        originalUrl: 'https://to-be-deleted.com',
+        urlCode: 'delete-me-by-id',
+        shortenedUrl: 'http://localhost/delete-me-by-id',
+      })
+      .returning()
+
     const result = await deleteLink({ urlCode: createdLink.urlCode })
     expect(isRight(result)).toBe(true)
 
-    const linkInDb = await db.query.links.findFirst({
-      where: eq(schema.links.id, createdLink.id),
-    })
-    expect(linkInDb).toBeUndefined()
+    const linkInDb = await db
+      .select()
+      .from(schema.links)
+      .where(eq(schema.links.id, createdLink.id))
+
+    expect(linkInDb).toHaveLength(0)
   })
 
   it('should be able to delete a link by its shortenedUrl', async () => {
+    const [createdLink] = await db
+      .insert(schema.links)
+      .values({
+        originalUrl: 'https://to-be-deleted.com',
+        urlCode: 'delete-me-by-id',
+        shortenedUrl: 'http://localhost/delete-me-by-id',
+      })
+      .returning()
+
     const result = await deleteLink({ shortenedUrl: createdLink.shortenedUrl })
     expect(isRight(result)).toBe(true)
 
-    const linkInDb = await db.query.links.findFirst({
-      where: eq(schema.links.id, createdLink.id),
-    })
-    expect(linkInDb).toBeUndefined()
+    const linkInDb = await db
+      .select()
+      .from(schema.links)
+      .where(eq(schema.links.id, createdLink.id))
+
+    expect(linkInDb).toHaveLength(0)
   })
 
   it('should return an error if the link is not found', async () => {
-    const result = await deleteLink({ linkId: 'non-existent-id' })
+    const result = await deleteLink({ id: 'non-existent-id' })
     expect(isLeft(result)).toBe(true)
     expect(result.left).toBeInstanceOf(LinkNotFoundError)
   })

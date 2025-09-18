@@ -9,6 +9,8 @@ import {
 import { env } from '@/env'
 import { createLinkRoute } from './routes/create-link'
 import { deleteLinkRoute } from './routes/delete-link'
+import { exportLinksRoute } from './routes/export-link'
+import { listLinksRoute } from './routes/list-link'
 import { getLinkRoute } from './routes/redirect-link'
 
 const server = fastify()
@@ -44,10 +46,11 @@ server.register(fastifySwaggerUI, {
   routePrefix: '/docs',
 })
 
-// Implementar rotas
 server.register(createLinkRoute)
 server.register(getLinkRoute)
 server.register(deleteLinkRoute)
+server.register(exportLinksRoute)
+server.register(listLinksRoute)
 
 console.log(env.DATABASE_URL)
 

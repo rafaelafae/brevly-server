@@ -8,13 +8,13 @@ import { ValidationError } from './errors/validation-error'
 
 const deleteLinkInputSchema = z
   .object({
-    linkId: z.string().optional(),
+    id: z.string().optional(),
     urlCode: z.string().optional(),
     shortenedUrl: z.url().optional(),
   })
   .refine(data => Object.values(data).some(val => val !== undefined), {
     message:
-      'At least one identifier (linkId, urlCode, or shortenedUrl) must be provided.',
+      'At least one identifier (id, urlCode, or shortenedUrl) must be provided.',
   })
 
 type DeleteLinkInput = z.input<typeof deleteLinkInputSchema>
@@ -45,25 +45,19 @@ export async function deleteLink(
     return makeLeft(new ValidationError(issues))
   }
 
-  const { linkId, urlCode, shortenedUrl } = validation.data
+  const { id, urlCode, shortenedUrl } = validation.data
   let codeToUse = urlCode
 
   if (shortenedUrl) {
-    try {
-      const urlObject = new URL(shortenedUrl)
-      codeToUse = urlObject.pathname.substring(1)
-    } catch {
-      return makeLeft(
-        new ValidationError({ shortenedUrl: 'Invalid URL format.' })
-      )
-    }
+    const urlObject = new URL(shortenedUrl)
+    codeToUse = urlObject.pathname.substring(1)
   }
 
   const result = await db
     .delete(schema.links)
     .where(
       or(
-        linkId ? eq(schema.links.id, linkId) : undefined,
+        id ? eq(schema.links.id, id) : undefined,
         codeToUse ? eq(schema.links.urlCode, codeToUse) : undefined
       )
     )

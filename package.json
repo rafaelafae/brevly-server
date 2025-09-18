@@ -13,16 +13,19 @@
     "db:migrate:test": "dotenv -e .env.test -- drizzle-kit migrate",
     "pretest": "pnpm run db:migrate:test",
     "pretest:watch": "pnpm run db:migrate:test",
-    "build": ""
+    "build": "tsup-node"
   },
   "keywords": [],
   "author": "rafaela.fae",
   "license": "ISC",
   "packageManager": "pnpm@10.15.0",
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.891.0",
+    "@aws-sdk/lib-storage": "^3.891.0",
     "@fastify/cors": "^11.1.0",
     "@fastify/swagger": "^9.5.1",
     "@fastify/swagger-ui": "^5.2.3",
+    "csv-stringify": "^6.6.0",
     "drizzle-orm": "^0.44.5",
     "fastify": "^5.6.0",
     "fastify-type-provider-zod": "^6.0.0",
@@ -33,9 +36,12 @@
   },
   "devDependencies": {
     "@biomejs/biome": "^2.2.4",
+    "@faker-js/faker": "^10.0.0",
     "@types/node": "^24.4.0",
+    "dayjs": "^1.11.18",
     "dotenv-cli": "^10.0.0",
     "drizzle-kit": "^0.31.4",
+    "tsup": "^8.5.0",
     "tsx": "^4.20.5",
     "typescript": "^5.9.2",
     "vite-tsconfig-paths": "^5.1.4",

@@ -29,31 +29,25 @@ export const createLinkRoute: FastifyPluginAsyncZod = async server => {
       },
     },
     async (request, reply) => {
-      try {
-        const { url, urlCode } = request.body
+      const { url, urlCode } = request.body
 
-        const result = await createLink(
-          { originalUrl: url, urlCode },
-          { baseUrl: env.BASE_URL }
-        )
+      const result = await createLink(
+        { originalUrl: url, urlCode },
+        { baseUrl: env.BASE_URL }
+      )
 
-        if (isLeft(result)) {
-          const error = result.left
+      if (isLeft(result)) {
+        const error = result.left
 
-          switch (error.constructor) {
-            case InvalidUrlFormatError:
-              return reply.status(400).send({ message: error.message })
-            case LinkAlreadyExistsError:
-              return reply.status(409).send({ message: error.message })
-          }
-        } else {
-          const { shortenedUrl } = result.right
-          return reply.status(201).send({ shortenedUrl })
+        switch (error.constructor) {
+          case InvalidUrlFormatError:
+            return reply.status(400).send({ message: error.message })
+          case LinkAlreadyExistsError:
+            return reply.status(409).send({ message: error.message })
         }
-      } catch (error) {
-        console.error(error)
-
-        return reply.status(500).send({ message: 'Internal server error.' })
+      } else {
+        const { shortenedUrl } = result.right
+        return reply.status(201).send({ shortenedUrl })
       }
     }
   )

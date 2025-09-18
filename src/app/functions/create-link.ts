@@ -42,16 +42,7 @@ export async function createLink(
 
   const shortenedUrl = new URL(urlCode, baseUrl).toString()
 
-  try {
-    await db.insert(schema.links).values({ originalUrl, urlCode, shortenedUrl })
+  await db.insert(schema.links).values({ originalUrl, urlCode, shortenedUrl })
 
-    return makeRight({ shortenedUrl })
-  } catch (error) {
-    if (error instanceof Error && 'code' in error && error.code === '23505') {
-      return makeLeft(new LinkAlreadyExistsError())
-    }
-    console.error(error)
-
-    throw new Error('Internal database error.')
-  }
+  return makeRight({ shortenedUrl })
 }

@@ -19,9 +19,10 @@ export async function getLink(
   const { urlCode } = input
 
   const result = await db.transaction(async tx => {
-    const link = await tx.query.links.findFirst({
-      where: eq(schema.links.urlCode, urlCode),
-    })
+    const [link] = await tx
+      .select()
+      .from(schema.links)
+      .where(eq(schema.links.urlCode, urlCode))
 
     if (!link) {
       return null

@@ -17,14 +17,13 @@ describe('get link use case', () => {
 
   it('should be able to get a link and increment its access count', async () => {
     const urlCode = 'github123'
-    const shortenedUrl = `http://test.com/${urlCode}`
 
     const [createdLink] = await db
       .insert(schema.links)
       .values({
         originalUrl: 'https://www.github.com',
         urlCode,
-        shortenedUrl,
+        shortenedUrl: 'http://test.com/github123',
       })
       .returning()
 
@@ -32,9 +31,13 @@ describe('get link use case', () => {
 
     expect(isRight(result)).toBe(true)
 
-    const updatedLink = await db.query.links.findFirst({
-      where: eq(schema.links.id, createdLink.id),
-    })
+    const results = await db
+      .select()
+      .from(schema.links)
+      .where(eq(schema.links.id, createdLink.id))
+      .limit(1)
+
+    const updatedLink = results[0]
 
     expect(updatedLink).toBeDefined()
     expect(updatedLink?.accessCount).toBe(1)
