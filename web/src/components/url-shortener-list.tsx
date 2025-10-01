@@ -1,18 +1,19 @@
 import { LinkIcon } from '@phosphor-icons/react'
-import { urlShortenerUseList } from '../hooks/url-shortener-use-list'
 import type { UrlShortener } from '../interfaces/url-shortener'
-import { Button } from './ui/button'
 import { Output } from './ui/output'
 import { UrlShortenerCard } from './url-shortener-card'
 
 interface Props {
 	list: Array<UrlShortener>
+	triggerRef: (node?: Element | null) => void
+	isFetchingNextPage: boolean
 }
 
-export const UrlShortenerList = ({ list }: Props) => {
-	const { isFetchingNextPage, hasNextPage, fetchNextPage } =
-		urlShortenerUseList()
-
+export const UrlShortenerList = ({
+	list,
+	triggerRef,
+	isFetchingNextPage,
+}: Props) => {
 	if (list == null || list.length === 0) {
 		return (
 			<div className="w-full mt-4 pt-8 pb-4 border-t border-gray-200 text-">
@@ -34,16 +35,11 @@ export const UrlShortenerList = ({ list }: Props) => {
 					</li>
 				))}
 			</ul>
-
-			{hasNextPage && (
-				<Button
-					className="w-full"
-					variant="secondary"
-					onClick={() => fetchNextPage()}
-					disabled={isFetchingNextPage}
-				>
-					{isFetchingNextPage ? 'Carregando...' : 'Carregar mais'}
-				</Button>
+			<div ref={triggerRef} />
+			{isFetchingNextPage && (
+				<p className="text-center text-gray-500 py-4">
+					Carregando mais links...
+				</p>
 			)}
 		</div>
 	)

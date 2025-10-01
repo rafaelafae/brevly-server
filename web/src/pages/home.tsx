@@ -1,5 +1,7 @@
 import { DownloadSimpleIcon } from '@phosphor-icons/react'
 import { AxiosError } from 'axios'
+import { useEffect } from 'react'
+import { useInView } from 'react-intersection-observer'
 import { toast } from 'react-toastify'
 import { Button } from '../components/ui/button'
 import { Card } from '../components/ui/card'
@@ -13,9 +15,19 @@ import { createtUrlShortener } from '../http/create-url-shortener'
 import { env } from '../store/env'
 
 export function Home() {
-	const { shortUrls, refetch } = urlShortenerUseList()
+	const { shortUrls, refetch, fetchNextPage, hasNextPage, isFetchingNextPage } =
+		urlShortenerUseList()
+
 	const { handleDownloadShortUrlReport, isLoadingReport } =
 		urlShortenerUseDownload()
+
+	const { ref, inView } = useInView({ threshold: 0 })
+
+	useEffect(() => {
+		if (inView && hasNextPage && !isFetchingNextPage) {
+			fetchNextPage()
+		}
+	}, [inView, hasNextPage, isFetchingNextPage, fetchNextPage])
 
 	const { register, onSubmit, isSubmitting, errors, watch } =
 		urlShortenerUseCreate({
@@ -88,11 +100,16 @@ export function Home() {
 							Baixar CSV
 						</Button>
 					</div>
+
 					<div
 						className="w-full h-[300px] overflow-y-auto"
 						style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
 					>
-						<UrlShortenerList list={shortUrls} />
+						<UrlShortenerList
+							list={shortUrls}
+							triggerRef={ref}
+							isFetchingNextPage={isFetchingNextPage}
+						/>
 					</div>
 				</Card>
 			</div>
